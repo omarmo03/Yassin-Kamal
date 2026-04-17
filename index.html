@@ -1,97 +1,102 @@
-const novel = {
-            id: Date.now(),
-            author: name,
-            authorImg: aImg || 'https://via.placeholder.com/40',
-            title: title,
-            category: cat,
-            text: content,
-            image: nImg,
-            likes: 0,
-            comments: []
-        };
-
-        novels.unshift(novel);
-        save();
-        closeAdmin();
-    }
-
-    // وظيفة حذف الرواية
-    function deleteNovel(id) {
-        if(confirm("هل أنت متأكد من حذف هذه الرواية نهائياً؟")) {
-            novels = novels.filter(x => x.id !== id);
-            save();
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="site-title-tag">عالم الروايات</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --bg: #f0f2f5;
+            --text: #333;
+            --card: #ffffff;
+            --transition: 0.3s ease;
+            --danger: #ff7675;
         }
-    }
 
-    // وظيفة حذف التعليق
-    function deleteComment(nId, cIdx) {
-        if(confirm("حذف هذا التعليق؟")) {
-            const novel = novels.find(x => x.id === nId);
-            novel.comments.splice(cIdx, 1);
-            save();
+        body.dark-mode {
+            --bg: #121212;
+            --text: #f5f5f5;
+            --card: #1e1e1e;
         }
-    }
 
-    function addLike(id) {
-        const n = novels.find(x => x.id === id);
-        n.likes++;
-        save();
-    }
-
-    function addComment(id) {
-        const msg = prompt("اكتب تعليقك:");
-        if(msg) {
-            novels.find(x => x.id === id).comments.push(msg);
-            save();
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            transition: var(--transition);
         }
-    }
 
-    function share(id) {
-        const n = novels.find(x => x.id === id);
-        if (navigator.share) {
-            navigator.share({ title: n.title, text: n.text.substring(0,50), url: window.location.href });
-        } else {
-            alert("تم نسخ رابط الرواية: " + n.title);
+        .hero {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            padding: 50px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-    }
 
-    function save() {
-        localStorage.setItem('novels_v3', JSON.stringify(novels));
-        render();
-    }
+        .admin-btn { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .theme-btn { position: fixed; bottom: 20px; left: 20px; z-index: 1000; }
 
-    function render() {
-        const feed = document.getElementById('feed');
-        feed.innerHTML = novels.map(n => 
-            <div class="novel-card">
-                ${isAdmin ? <button class="delete-novel-btn" onclick="deleteNovel(${n.id})">حذف 🗑️</button> : ''}
-                
-                <span class="tag">${n.category}</span>
-                <div class="author-header" style="margin-top:10px;">
-                    <img src="${n.authorImg}" class="author-avatar">
-                    <strong>${n.author}</strong>
-                </div>
-                <h3>${n.title}</h3>
-                <p style="white-space:pre-wrap;">${n.text}</p>
-                ${n.image ? <img src="${n.image}" class="novel-img"> : ''}
-                
-                <div class="actions">
-                    <button class="action-btn" onclick="addLike(${n.id})">❤️ ${n.likes}</button>
-                    <button class="action-btn" onclick="addComment(${n.id})">💬 تعليق</button>
-                    <button class="action-btn" onclick="share(${n.id})">🔗 مشاركة</button>
-                </div>
+        .circle-btn {
+            width: 55px; height: 55px; border-radius: 50%;
+            background: var(--primary); color: white;
+            border: none; cursor: pointer; font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .circle-btn:hover { transform: scale(1.1) rotate(15deg); }
 
-                <div style="margin-top:10px;">
-                    ${n.comments.map((c, i) => 
-                        <div class="comment-box">
-                            ${isAdmin ? <span class="del-comment" onclick="deleteComment(${n.id}, ${i})">❌</span> : ''}
-                            ${c}
-                        </div>
-                    ).join('')}
-                </div>
-            </div>
-        ).join('');
-    }
-</script>
-</body>
-</html>
+        .admin-modal {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card); color: var(--text);
+            padding: 25px; border-radius: 15px;
+            width: 90%; max-width: 500px; z-index: 2000;
+            box-shadow: 0 0 100px rgba(0,0,0,0.5);
+            max-height: 85vh; overflow-y: auto;
+        }
+
+        .overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1500;
+        }
+
+        .container { max-width: 700px; margin: 30px auto; padding: 0 15px; }
+        .novel-card {
+            background: var(--card); border-radius: 15px;
+            padding: 20px; margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .tag { background: var(--primary); color: white; padding: 4px 10px; border-radius: 5px; font-size: 12px; }
+        .novel-img { width: 100%; border-radius: 10px; margin-top: 15px; }
+        .author-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .author-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+
+        input, textarea, select {
+            width: 100%; padding: 10px; margin: 8px 0;
+            border: 1px solid #ddd; border-radius: 8px; background: var(--card); color: var(--text);
+        }
+
+        .actions { display: flex; gap: 15px; margin-top: 15px; border-top: 1px solid #44444422; padding-top: 10px; }
+        .action-btn { background: none; border: none; color: var(--text); cursor: pointer; font-weight: bold; }
+
+        .comment-box { background: rgba(128,128,128,0.1); padding: 8px; border-radius: 8px; margin-top: 5px; font-size: 14px; position: relative; }
+        .del-comment { color: var(--danger); float: left; cursor: pointer; font-weight: bold; }
+        
+        /* تنسيق زر الحذف العلوي */
+        .delete-novel-btn {
+            position: absolute; top: 15px; left: 15px;
+            background: none; border: 1px solid var(--danger);
+            color: var(--danger); padding: 2px 8px; border-radius: 5px;
+            cursor: pointer; font-size: 12px; transition: 0.3s;
+        }
+        .delete-novel-btn:hover { background: var(--danger); color: white; }
+    </style>
+</head>
+<body id="body">
